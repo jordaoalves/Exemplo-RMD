@@ -1,0 +1,345 @@
+---
+title: "Exemplo RMD"
+author: "Jordão Alves"
+date: "12/10/2019"
+output: html_document
+---
+
+<p>
+Neste exemplo de relatório em RMarkdown iremos contabilizar e expor em forma de Treemap as palavras contidas nas versões da canção "O Que Será?" composta por Chico Buarque em 1976 para o filme "Dona Flor e Seus Dois Maridos" que foi baseado no livro de Jorge Amado. Essa canção tem três versões: 
+<p>
+<p>
+* O Que Será? (Abertura)
+* O Que Será? (À flor da pele)
+* O Que Será? (À Flor da Terra)
+<p>
+
+```{r letras, include=FALSE}
+abertura <- "E todos os meu nervos estão a rogar
+E todos os meus órgãos estão a clamar
+E uma aflição medonha me faz implorar
+O que não tem vergonha, nem nunca terá
+O que não tem governo, nem nunca terá
+O que não tem juízo
+O que será que lhe dá
+O que será meu nego, será que lhe dá
+Que não lhe dá sossego, será que lhe dá
+Será que o meu chamego quer me judiar
+Será que isso são horas dele vadiar
+Será que passa fora o resto da dia
+Será que foi-se embora em má companhia
+Será que essa criança quer me agoniar
+Será que não se cansa de desafiar
+O que não tem descanso, nem nunca terá
+O que não tem cansaço, nem nunca terá
+O que não tem limite
+O que será que será
+Que dá dentro da gente, que não devia
+Que desacata a gente, que é revelia
+Que é feito uma aguardente que não sacia
+Que é feito estar doente de um folia
+Que nem dez mandamentos vão conciliar
+Nem todos os unguentos vão aliviar
+Nem todos os quebrantos, toda alquimia
+E nem todos os santos, será que será
+O que não tem governo, nem nunca terá
+O que não tem vergonha, nem nunca terá
+O que não tem juízo"
+
+aFlorDaPele <- "O que será que me dá
+Que me bole por dentro, será que me dá
+Que brota à flor da pele, será que me dá
+E que me sobe às faces e me faz corar
+E que me salta aos olhos a me atraiçoar
+E que me aperta o peito e me faz confessar
+O que não tem mais jeito de dissimular
+E que nem é direito ninguém recusar
+E que me faz mendigo, me faz suplicar
+O que não tem medida, nem nunca terá
+O que não tem remédio, nem nunca terá
+O que não tem receita
+
+O que será que será
+Que dá dentro da gente e que não devia
+Que desacata a gente, que é revelia
+Que é feito uma aguardente que não sacia
+Que é feito estar doente de uma folia
+Que nem dez mandamentos vão conciliar
+Nem todos os unguentos vão aliviar
+Nem todos os quebrantos, toda alquimia
+E nem todos os santos, será que será
+O que não tem descanso, nem nunca terá
+O que não tem cansaço, nem nunca terá
+O que não tem limite
+
+O que será que me dá
+Que me queima por dentro, será que me dá
+Que me perturba o sono, será que me dá
+Que todos os tremores me vêm agitar
+Que todos os ardores me vêm atiçar
+Que todos os suores me vêm encharcar
+Que todos os meus nervos estão a rogar
+Que todos os meus órgãos estão a clamar
+E uma aflição medonha me faz implorar
+O que não tem vergonha, nem nunca terá
+O que não tem governo, nem nunca terá
+O que não tem juízo"
+
+aFlorDaTerra <- "O que será, que será?
+Que andam suspirando pelas alcovas
+Que andam sussurrando em versos e trovas
+Que andam combinando no breu das tocas
+Que anda nas cabeças, anda nas bocas
+Que andam acendendo velas nos becos
+Que estão falando alto pelos botecos
+E gritam nos mercados que com certeza
+Está na natureza
+Será, que será?
+O que não tem certeza nem nunca terá
+O que não tem conserto nem nunca terá
+O que não tem tamanho
+O que será, que será?
+Que vive nas ideias desses amantes
+Que cantam os poetas mais delirantes
+Que juram os profetas embriagados
+Que está na romaria dos mutilados
+Que está na fantasia dos infelizes
+Que está no dia a dia das meretrizes
+No plano dos bandidos, dos desvalidos
+Em todos os sentidos
+Será, que será?
+O que não tem decência nem nunca terá
+O que não tem censura nem nunca terá
+O que não faz sentido
+O que será, que será?
+Que todos os avisos não vão evitar
+Por que todos os risos vão desafiar
+Por que todos os sinos irão repicar
+Por que todos os hinos irão consagrar
+E todos os meninos vão desembestar
+E todos os destinos irão se encontrar
+E mesmo o Padre Eterno que nunca foi lá
+Olhando aquele inferno vai abençoar
+O que não tem governo nem nunca terá
+O que não tem vergonha nem nunca terá
+O que não tem juízo
+O que será, que será?
+Que todos os avisos não vão evitar
+Por que todos os risos vão desafiar
+Por que todos os sinos irão repicar
+Por que todos os hinos irão consagrar
+E todos os meninos vão desembestar
+E todos os destinos irão se encontrar
+E mesmo o Padre Eterno que nunca foi lá
+Olhando aquele inferno vai abençoar
+O que não tem governo nem nunca terá
+O que não tem vergonha nem nunca terá
+O que não tem juízo"
+
+
+```
+
+## Criando função auxiliar
+
+Criando uma função que pega o conjunto de strings da letra da música e cria um Treemap das palavras disponíveis para sua plotagem. Repare que na função foram eliminados alguns conectivos para exibição das palavras ficarem mais claras.
+
+```{r strings, echo=TRUE, message=FALSE, warning=FALSE}
+library(stringr)
+library(dplyr)
+library(treemap)
+vetorPalavras <- function(string,titulo){
+
+## colocando tudo em minusculo
+string <- str_to_lower(string)
+## separando primeiramente por linha  
+sepLinha <- str_split(string, fixed('\n'))
+sepLinha <- paste(sepLinha[[1]],collapse = " ")
+## removendo caracteres
+sepLinha <- str_replace_all(sepLinha, "[,.!?]", "")
+## separando por espaço
+sepEspaco <- str_split(sepLinha, fixed(' '))
+vetorPalavras <- as.factor(sepEspaco[[1]])
+
+dados <- aggregate(x = vetorPalavras, 
+                   by = list(palavras = vetorPalavras), 
+                   FUN = length)
+
+## filtrando os dados, eliminando algumas palavras conectivas
+dadosFiltrados <- dados%>%
+  filter( palavras != "a" & palavras != "o" & palavras != "as" & palavras != "os" &
+          palavras != "é" & palavras != "e" & palavras != "são" & palavras != "à" &
+          palavras != "da" & palavras != "das" & palavras != "do" & palavras != "dos" &
+          palavras != "na" & palavras != "no" & palavras != "de" & palavras != "se" &
+          palavras != "nas" & palavras != "nos" & palavras != "em" & palavras != "um" &
+          palavras != "às" & palavras != "aos" & palavras != "ao" & palavras != "" )
+
+treemap(dadosFiltrados,
+        index="palavras",
+        vSize="x",
+        vColor="x",
+        type="value",
+        palette="RdYlBu",
+        format.legend = list(scientific = FALSE, big.mark = " "
+        ),title.legend="Número de palavras",
+        title=titulo)
+}
+```
+<br />
+
+## O Que Será? (Abertura)
+
+
+>E todos os meu nervos estão a rogar <br />
+E todos os meus órgãos estão a clamar <br />
+E uma aflição medonha me faz implorar <br />
+O que não tem vergonha, nem nunca terá <br />
+O que não tem governo, nem nunca terá <br />
+O que não tem juízo <br />
+>
+> O que será que lhe dá <br />
+O que será meu nego, será que lhe dá <br />
+Que não lhe dá sossego, será que lhe dá <br />
+Será que o meu chamego quer me judiar <br />
+Será que isso são horas dele vadiar <br />
+Será que passa fora o resto da dia <br />
+Será que foi-se embora em má companhia <br />
+Será que essa criança quer me agoniar <br />
+Será que não se cansa de desafiar <br />
+O que não tem descanso, nem nunca terá <br />
+O que não tem cansaço, nem nunca terá <br />
+O que não tem limite <br />
+> 
+> O que será que será <br />
+Que dá dentro da gente, que não devia <br />
+Que desacata a gente, que é revelia <br />
+Que é feito uma aguardente que não sacia <br />
+Que é feito estar doente de um folia <br />
+Que nem dez mandamentos vão conciliar <br />
+Nem todos os unguentos vão aliviar <br />
+Nem todos os quebrantos, toda alquimia <br />
+E nem todos os santos, será que será <br />
+O que não tem governo, nem nunca terá <br />
+O que não tem vergonha, nem nunca terá <br />
+O que não tem juízo <br />
+>
+> Chico Buarque de Holanda
+
+```{r TMabertura, echo=FALSE,fig.height=4,fig.width=9,fig.align="center"}
+vetorPalavras(abertura,"Treemap das palavras de 'O que será (Abertura)' ")
+```
+<br />
+
+## O Que Será? (À Flor da Pele)
+
+
+>O que será que me dá <br />
+Que me bole por dentro, será que me dá <br />
+Que brota à flor da pele, será que me dá <br />
+E que me sobe às faces e me faz corar <br />
+E que me salta aos olhos a me atraiçoar <br />
+E que me aperta o peito e me faz confessar <br />
+O que não tem mais jeito de dissimular <br />
+E que nem é direito ninguém recusar <br />
+E que me faz mendigo, me faz suplicar <br />
+O que não tem medida, nem nunca terá <br />
+O que não tem remédio, nem nunca terá <br />
+O que não tem receita <br />
+>
+>O que será que será <br />
+Que dá dentro da gente e que não devia <br />
+Que desacata a gente, que é revelia <br />
+Que é feito uma aguardente que não sacia <br />
+Que é feito estar doente de uma folia <br />
+Que nem dez mandamentos vão conciliar <br />
+Nem todos os unguentos vão aliviar <br />
+Nem todos os quebrantos, toda alquimia <br />
+E nem todos os santos, será que será <br />
+O que não tem descanso, nem nunca terá <br />
+O que não tem cansaço, nem nunca terá <br />
+O que não tem limite <br />
+>
+>O que será que me dá <br />
+Que me queima por dentro, será que me dá <br />
+Que me perturba o sono, será que me dá <br />
+Que todos os tremores me vêm agitar <br />
+Que todos os ardores me vêm atiçar <br />
+Que todos os suores me vêm encharcar <br />
+Que todos os meus nervos estão a rogar <br />
+Que todos os meus órgãos estão a clamar <br />
+E uma aflição medonha me faz implorar <br />
+O que não tem vergonha, nem nunca terá <br />
+O que não tem governo, nem nunca terá <br />
+O que não tem juízo <br />
+>
+> Chico Buarque de Holanda
+
+```{r TMaFlorDaPele, echo=FALSE,fig.height=4,fig.width=9,fig.align="center"}
+vetorPalavras(aFlorDaPele,"Treemap das palavras de 'O que será (À Flor da Pele)' ")
+```
+<br />
+
+## O Que Será? (À Flor da Terra)
+
+
+> O que será, que será? <br />
+Que andam suspirando pelas alcovas <br />
+Que andam sussurrando em versos e trovas <br />
+Que andam combinando no breu das tocas <br />
+Que anda nas cabeças, anda nas bocas <br />
+Que andam acendendo velas nos becos <br />
+Que estão falando alto pelos botecos <br />
+E gritam nos mercados que com certeza <br />
+Está na natureza <br />
+>
+> Será, que será? <br />
+O que não tem certeza nem nunca terá <br />
+O que não tem conserto nem nunca terá <br />
+O que não tem tamanho <br />
+>
+>O que será, que será? <br />
+Que vive nas ideias desses amantes <br />
+Que cantam os poetas mais delirantes <br />
+Que juram os profetas embriagados <br />
+Que está na romaria dos mutilados <br />
+Que está na fantasia dos infelizes <br />
+Que está no dia a dia das meretrizes <br />
+No plano dos bandidos, dos desvalidos <br />
+Em todos os sentidos <br />
+>
+> Será, que será? <br />
+O que não tem decência nem nunca terá <br />
+O que não tem censura nem nunca terá <br />
+O que não faz sentido <br />
+>
+> O que será, que será? <br />
+Que todos os avisos não vão evitar <br />
+Por que todos os risos vão desafiar <br />
+Por que todos os sinos irão repicar <br />
+Por que todos os hinos irão consagrar <br />
+E todos os meninos vão desembestar <br />
+E todos os destinos irão se encontrar <br />
+E mesmo o Padre Eterno que nunca foi lá <br />
+Olhando aquele inferno vai abençoar <br />
+O que não tem governo nem nunca terá <br />
+O que não tem vergonha nem nunca terá <br />
+O que não tem juízo <br />
+>
+> O que será, que será? <br />
+Que todos os avisos não vão evitar <br />
+Por que todos os risos vão desafiar <br />
+Por que todos os sinos irão repicar <br />
+Por que todos os hinos irão consagrar <br />
+E todos os meninos vão desembestar <br />
+E todos os destinos irão se encontrar <br />
+E mesmo o Padre Eterno que nunca foi lá <br />
+Olhando aquele inferno vai abençoar <br />
+O que não tem governo nem nunca terá <br />
+O que não tem vergonha nem nunca terá <br />
+O que não tem juízo <br />
+>
+> Chico Buarque de Holanda
+
+```{r TMaFlorDaTerra, echo=TRUE,fig.height=4,fig.width=9,fig.align="center"}
+vetorPalavras(aFlorDaTerra,"Treemap das palavras de 'O que será (À Flor da Terra)' ")
+```
+<br />
