@@ -140,9 +140,9 @@ O que não tem juízo"
 ```
 
 ## Criando função auxiliar
-
+<p>
 Criando uma função que pega o conjunto de strings da letra da música e cria um Treemap das palavras disponíveis para sua plotagem. Repare que na função foram eliminados alguns conectivos para exibição das palavras ficarem mais claras.
-
+<p>
 ```{r strings, echo=TRUE, message=FALSE, warning=FALSE}
 library(stringr)
 library(dplyr)
